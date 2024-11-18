@@ -63,7 +63,6 @@ var BroccoliAngularTemplateCache = function BroccoliAngularTemplateCache(inTree,
 	if (!(this instanceof BroccoliAngularTemplateCache)) {
     	return new BroccoliAngularTemplateCache(inTree, options);
   }
-  this.inputTree = inTree;
   this.options = options || {};
 	CachingWriter.apply(this, arguments);
 };
@@ -72,8 +71,11 @@ BroccoliAngularTemplateCache.prototype.constructor = BroccoliAngularTemplateCach
 BroccoliAngularTemplateCache.prototype.description = 'angular templates cache';
 
 
-BroccoliAngularTemplateCache.prototype.updateCache = function(srcDir, destDir) {
-	var self = this,dest;
+BroccoliAngularTemplateCache.prototype.build = function() {
+	var self = this,
+		srcDir = self.inputPaths,
+		destDir = self.outputPath,
+		dest;
 
 	var src = path.join(srcDir[0],self.options.srcDir);
 
