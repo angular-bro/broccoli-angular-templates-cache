@@ -1,5 +1,5 @@
 {
-  "name": "broccoli-angular-templates-cache",
+  "name": "@angular-bro/broccoli-angular-templates-cache",
   "version": "1.1.0",
   "description": "",
   "main": "broccoli-angular-templates-cache.js",
