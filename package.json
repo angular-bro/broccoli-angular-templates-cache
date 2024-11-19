@@ -12,11 +12,9 @@
   },
   "dependencies": {
     "broccoli-caching-writer": "^3.0.0",
-    "html-minifier": "^4.0.0",
-    "lodash": "^4.17.12",
+    "html-minifier-terser": "^7.0.0",
     "mkdirp": "^0.5.0",
-    "recursive-readdir": "^2.0.0",
-    "rsvp": "^3.0.16"
+    "recursive-readdir": "^2.0.0"
   },
   "keywords": [
     "angularjs-template-cache",

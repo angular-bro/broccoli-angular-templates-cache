@@ -1,8 +1,6 @@
 var CachingWriter = require('broccoli-caching-writer'),
-    rsvp= require('rsvp'),
     recursive = require('recursive-readdir'),
-    _ = require('lodash'),
-    htmlMin = require('html-minifier').minify,
+    htmlMin = require('html-minifier-terser').minify,
     fs = require("fs"),
     mkdirp = require('mkdirp'),
     path = require("path");
@@ -22,16 +20,15 @@ function angularModuleTemplate(moduleName, templateCode) {
 	return 'angular.module("' + moduleName + '").run([\'$templateCache\', function(a) { ' + templateCode + ' }]);';
 }
 function transformTemplates(templates, strip, prepend, minify) {
-	var cacheOutput = '',
-	i = templates.length;
-	while (i--) {
-		cacheOutput += transformTemplateEntry(templates[i], strip, prepend, minify);
-	}
-	return cacheOutput;
+	const promises = templates.map(function (template) {
+		return transformTemplateEntry(template, strip, prepend, minify);
+	});
+	return Promise.all(promises).then(function (templates) {
+		return templates.join('')
+	});
 }
 function transformTemplateEntry(entry, strip, prepend, minify) {
 	var path = entry.path,
-	content = entry.content,
 	parseError;
 
 	if (strip) {
@@ -40,17 +37,17 @@ function transformTemplateEntry(entry, strip, prepend, minify) {
 	if (prepend) {
 		path = prepend + path;
 	}
-	if (minify !== false) {
-		try {
-			content = htmlMin(content, minify);
-		} catch (e) {
+	return new Promise(function (resolve, reject) {
+		const promise = minify !== false ? htmlMin(entry.content, minify) : Promise.resolve(entry.content);
+
+		promise.then(function (content) {
+			content = escapeHtmlContent(content);
+			resolve('a.put(\'' + path + '\', \'' + content + '\');\n\t');
+		}, function (e) {
 			parseError = String(e);
-			content = '<h1>Invalid template: ' + entry.path + '</h1>' +
-			'<pre>' + escapeTags(parseError) + '</pre>';
-		}
-	}
-	content = escapeHtmlContent(content);
-	return 'a.put(\'' + path + '\', \'' + content + '\');\n\t';
+			resolve('<h1>Invalid template: ' + entry.path + '</h1>' + '<pre>' + escapeTags(parseError) + '</pre>');
+		});
+	})
 }
 
 function stripPath(path, strip) {
@@ -86,7 +83,7 @@ BroccoliAngularTemplateCache.prototype.build = function() {
   }
 	mkdirp.sync(path.dirname(dest));
 
-	var promise = new rsvp.Promise(function(resolvePromise, rejectPromise) {
+	var promise = new Promise(function(resolvePromise, rejectPromise) {
 		recursive(src, function (err, files) {
 
 			var templates = [],
@@ -97,22 +94,23 @@ BroccoliAngularTemplateCache.prototype.build = function() {
 			firstFile = null,
 			filePath;
 
-			_.each(files, function(file){
+			files.forEach(function(file){
 				filePath = file.replace(srcDir[0]+'/','');
 				templates.push({
 					path: filePath || file,
 					content: fs.readFileSync(file).toString('utf-8')
 				});
 			});
-			var joinedContents = transformTemplates(templates, strip, prepend, minify);
-			var module = angularModuleTemplate(moduleName, joinedContents);
-			fs.writeFile(dest,module,function(err){
-				if(err){
-					rejectPromise(err);
-				}else{
-					resolvePromise('templates created');
-				}
-			});
+			transformTemplates(templates, strip, prepend, minify).then(function (joinedContents) {
+				var module = angularModuleTemplate(moduleName, joinedContents);
+				fs.writeFile(dest,module,function(err){
+					if(err){
+						rejectPromise(err);
+					}else{
+						resolvePromise('templates created');
+					}
+				});
+			}, rejectPromise);
 		});
 	});
 	return promise;
