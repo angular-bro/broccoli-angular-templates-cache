@@ -33,7 +33,7 @@ function transformTemplateEntry(entry, strip, prepend, minify) {
 	var path = entry.path,
 	content = entry.content,
 	parseError;
-	path = stripPath(path, process.cwd());
+
 	if (strip) {
 		path = stripPath(path, strip);
 	}
@@ -98,9 +98,7 @@ BroccoliAngularTemplateCache.prototype.build = function() {
 			filePath;
 
 			_.each(files, function(file){
-				if(self.options.absolute){
-					filePath = file.replace(path.dirname(srcDir[0])+'/','');
-				}
+				filePath = file.replace(srcDir[0]+'/','');
 				templates.push({
 					path: filePath || file,
 					content: fs.readFileSync(file).toString('utf-8')
