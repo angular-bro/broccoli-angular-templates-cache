@@ -11,12 +11,11 @@
     "url": "https://github.com/thetutlage/broccoli-angular-templates-cache.git"
   },
   "dependencies": {
-    "broccoli": "^1.0.0",
     "broccoli-caching-writer": "^3.0.0",
-    "html-minifier": "^0.6.9",
+    "html-minifier": "^4.0.0",
     "lodash": "^4.17.12",
     "mkdirp": "^0.5.0",
-    "recursive-readdir": "^1.2.1",
+    "recursive-readdir": "^2.0.0",
     "rsvp": "^3.0.16"
   },
   "keywords": [
